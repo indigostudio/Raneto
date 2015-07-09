@@ -35,8 +35,9 @@ extend(raneto.config, config);
 // Handle all requests
 app.all('*', function(req, res, next) {
     if(req.query.search){
+        var slug = req.params[0];
         var searchQuery = validator.toString(validator.escape(_s.stripTags(req.query.search))).trim(),
-            searchResults = raneto.doSearch(searchQuery),
+            searchResults = raneto.doSearch(slug, searchQuery),
             pageListSearch = raneto.getPages('');
 
         return res.render('search', {
@@ -44,18 +45,21 @@ app.all('*', function(req, res, next) {
             pages: pageListSearch,
             search: searchQuery,
             searchResults: searchResults,
-            body_class: 'page-search'
+            body_class: 'page-search',
+            root: '/' + raneto.getLangPrefix(slug, false)
         });
     }
     else if(req.params[0]){
         var slug = req.params[0];
-        if(slug == '/') slug = '/index';
+
+        var isHome = raneto.isHome(slug);
+        if(isHome) slug = raneto.nromalizeHomeSlug(slug);
 
         var pageList = raneto.getPages(slug),
-            filePath = path.normalize(raneto.config.content_dir + slug);
+            filePath = raneto.mapPath(slug);
         if(!fs.existsSync(filePath)) filePath += '.md';
 
-        if(slug == '/index' && !fs.existsSync(filePath)){
+        if(isHome && !fs.existsSync(filePath)){
             return res.render('home', {
                 config: config,
                 pages: pageList,
@@ -87,7 +91,8 @@ app.all('*', function(req, res, next) {
                         meta: meta,
                         content: html,
                         body_class: 'page-'+ raneto.cleanString(slug),
-                        last_modified: moment(stat.mtime).format('Do MMM YYYY')
+                        last_modified: moment(stat.mtime).format('Do MMM YYYY'),
+                        root: '/' + raneto.getLangPrefix(slug, false)
                     });
                 } else {
                     // Serve static file

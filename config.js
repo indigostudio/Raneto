@@ -29,6 +29,16 @@ var config = {
 	// Specify the path of your content folder where all your '.md' files are located
 	content_dir: './content/',
 
+	// Slugs prefixes of root content directories to support separated content directories for 
+	// multiple languages, place the language specific md files under a folder named as these roots
+	lang_paths: ['en', 'ja'], 
+
+	// lunr-languages ids
+	lang_path_to_lunr: {en:'', ja:'jp'}, 
+
+	// Default slug prefix, when there's no lang prefix we'll use this one; use '' to avoid languages completely
+	default_lang_path: 'en',
+
 	// Add your analytics tracking code (including script tags)
 	analytics: ""
 
