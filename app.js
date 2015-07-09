@@ -38,7 +38,7 @@ app.all('*', function(req, res, next) {
         var slug = req.params[0];
         var searchQuery = validator.toString(validator.escape(_s.stripTags(req.query.search))).trim(),
             searchResults = raneto.doSearch(slug, searchQuery),
-            pageListSearch = raneto.getPages('');
+            pageListSearch = raneto.getPages(slug);
 
         return res.render('search', {
             config: config,
