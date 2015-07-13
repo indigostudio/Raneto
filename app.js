@@ -130,8 +130,7 @@ app.use(function(err, req, res, next) {
         status: err.status,
         message: err.message,
         error: {},
-        body_class: 'page-error',
-        literal: literal
+        body_class: 'page-error'
     });
 });
 
