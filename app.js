@@ -12,6 +12,7 @@ var express = require('express'),
     extend = require('extend'),
     raneto = require('raneto-core'),
     config = require('./config'),
+    i18n = require("i18n"),
     app = express();
 
 // Setup views
@@ -32,10 +33,25 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Setup config
 extend(raneto.config, config);
 
+i18n.configure({
+    locales:config.lang_paths,
+    directory: __dirname + '/locales'
+});
+
 // Handle all requests
 app.all('*', function(req, res, next) {
+    var slug = req.params[0];
+
+    var lang = raneto.getLangPrefix(slug, true);
+    if (lang != "") {
+        i18n.setLocale(lang.substring(0, lang.length-1));
+    }
+
+    var literal = function() { 
+        return function(text, render) { return i18n.__(text); }; 
+    }
+
     if(req.query.search){
-        var slug = req.params[0];
         var searchQuery = validator.toString(validator.escape(_s.stripTags(req.query.search))).trim(),
             searchResults = raneto.doSearch(slug, searchQuery),
             pageListSearch = raneto.getPages(slug);
@@ -46,12 +62,11 @@ app.all('*', function(req, res, next) {
             search: searchQuery,
             searchResults: searchResults,
             body_class: 'page-search',
-            root: '/' + raneto.getLangPrefix(slug, false)
+            root: '/' + raneto.getLangPrefix(slug, false),
+            literal: literal
         });
     }
     else if(req.params[0]){
-        var slug = req.params[0];
-
         var isHome = raneto.isHome(slug);
         if(isHome) slug = raneto.nromalizeHomeSlug(slug);
 
@@ -63,13 +78,14 @@ app.all('*', function(req, res, next) {
             return res.render('home', {
                 config: config,
                 pages: pageList,
-                body_class: 'page-home'
+                body_class: 'page-home',
+                literal: literal
             });
         } else {
             fs.readFile(filePath, 'utf8', function(err, content) {
                 if(err){
                     err.status = '404';
-                    err.message = 'Whoops. Looks like this page doesn\'t exist.';
+                    err.message = i18n.__('404');
                     return next(err);
                 }
 
@@ -92,7 +108,8 @@ app.all('*', function(req, res, next) {
                         content: html,
                         body_class: 'page-'+ raneto.cleanString(slug),
                         last_modified: moment(stat.mtime).format('Do MMM YYYY'),
-                        root: '/' + raneto.getLangPrefix(slug, false)
+                        root: '/' + raneto.getLangPrefix(slug, false),
+                        literal: literal
                     });
                 } else {
                     // Serve static file
@@ -113,7 +130,8 @@ app.use(function(err, req, res, next) {
         status: err.status,
         message: err.message,
         error: {},
-        body_class: 'page-error'
+        body_class: 'page-error',
+        literal: literal
     });
 });
 

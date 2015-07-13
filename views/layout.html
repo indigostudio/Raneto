@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>{{#meta.title}}{{meta.title}} - {{/meta.title}}{{config.site_title}}</title>
+	<title>{{#meta.title}}{{meta.title}} - {{/meta.title}}{{#literal}}Site Title{{/literal}}</title>
 	{{#meta.description}}<meta name="description" content="{{meta.description}}">{{/meta.description}}
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -21,15 +21,15 @@
 			<div class="row">
 				<div class="col-sm-6">
 
-					<a href="/" class="logo">{{config.site_title}}</a>
+					<a href="{{root}}" class="logo">{{#literal}}Site Title{{/literal}}</a>
 
 				</div>
 				<div class="col-sm-6">
 
 					<form class="search-form form-inline pull-right" role="form" action="{{root}}">
 						<div class="form-group">
-							<label class="sr-only" for="search">Search</label>
-							<input type="search" class="form-control" name="search" id="search" size="30" value="{{search}}" placeholder="Search">
+							<label class="sr-only" for="search">{{#literal}}Search{{/literal}}</label>
+							<input type="search" class="form-control" name="search" id="search" size="30" value="{{search}}" placeholder="{{#literal}}Search{{/literal}}">
 						</div>
 					</form>
 
