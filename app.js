@@ -107,7 +107,7 @@ app.all('*', function(req, res, next) {
                         meta: meta,
                         content: html,
                         body_class: 'page-'+ raneto.cleanString(slug),
-                        last_modified: moment(stat.mtime).format('Do MMM YYYY'),
+                        last_modified: moment(stat.mtime).format(i18n.__('Date Format')),
                         root: '/' + raneto.getLangPrefix(slug, false),
                         literal: literal
                     });
