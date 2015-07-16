@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>{{#meta.title}}{{meta.title}} - {{/meta.title}}{{#literal}}Site Title{{/literal}}</title>
+	<title>{{#meta.title}}{{meta.title}}{{/meta.title}}{{^meta.title}}{{#literal}}Site Title{{/literal}}{{/meta.title}}</title>
 	{{#meta.description}}<meta name="description" content="{{meta.description}}">{{/meta.description}}
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 
