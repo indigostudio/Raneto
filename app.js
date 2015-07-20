@@ -38,6 +38,45 @@ i18n.configure({
     directory: __dirname + '/locales'
 });
 
+var parse = marked.Parser.parse;
+marked.Parser.parse = function(src, options, renderer) {
+    options.renderer.links = src.links;
+    return parse(src, options, renderer);
+};
+
+function buildMarkedReader() {
+    // Allows the definition of explicit anchors by defining headings like this:
+    //   ## (anchor_id) This is a header
+    // This enables using same anchors on any language
+    var customRenderer = new marked.Renderer();
+    customRenderer.heading = function (text, level) {
+        var escapedText;
+        var regex = /^\((.+)\)/;
+        var matches = text.match(regex);
+
+        if (matches !== null && matches.length > 1) {
+            escapedText = matches[1];
+            text = text.replace(regex, '').trim();
+            var link = this.links[escapedText]; 
+            if (link != null && link.href != null) {
+                escapedText = link.href.substring(1);
+            }
+        }
+        else {
+            escapedText = text.toLowerCase().replace(/[^\w]+/g, '-');
+        }
+
+        return '<h' + level + '><a name="' +
+                    escapedText +
+                     '" class="anchor" href="#' +
+                     escapedText +
+                     '"><span class="header-link"></span></a>' +
+                      text + '</h' + level + '>';
+    };
+
+    return customRenderer;
+}
+
 // Handle all requests
 app.all('*', function(req, res, next) {
     var slug = req.params[0];
@@ -99,7 +138,7 @@ app.all('*', function(req, res, next) {
                     if(!meta.title) meta.title = raneto.slugToTitle(filePath);
                     // Content
                     content = raneto.processVars(content);
-                    var html = marked(content);
+                    var html = marked(content, { renderer: buildMarkedReader() });
 
                     return res.render('page', {
                         config: config,
