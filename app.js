@@ -49,9 +49,9 @@ function buildMarkedReader() {
     //   ## (anchor_id) This is a header
     // This enables using same anchors on any language
     var customRenderer = new marked.Renderer();
-    customRenderer.heading = function (text, level) {
+    customRenderer.heading = function (text, level, raw) {
         var escapedText;
-        var regex = /^\((.+)\)/;
+        var regex = /^\(([^)]+)\)/;
         var matches = text.match(regex);
 
         if (matches !== null && matches.length > 1) {
@@ -63,7 +63,7 @@ function buildMarkedReader() {
             }
         }
         else {
-            escapedText = text.toLowerCase().replace(/[^\w]+/g, '-');
+            escapedText = raw.toLowerCase().replace(/[^\w]+/g, '-');
         }
 
         return '<h' + level + '><a name="' +
