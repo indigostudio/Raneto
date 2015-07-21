@@ -38,7 +38,6 @@
     "glob": "^4.0.0",
     "hogan-express": "^0.5.2",
     "lunr": "^0.5.3",
-    "marked": "^0.3.2",
     "moment": "^2.6.0",
     "morgan": "~1.0.0",
     "raneto-core": "git://github.com/indigostudio/Raneto-Core.git#indigodesigned",

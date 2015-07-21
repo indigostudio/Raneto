@@ -7,7 +7,6 @@ var express = require('express'),
     bodyParser = require('body-parser'),
     _s = require('underscore.string'),
     moment = require('moment'),
-    marked = require('marked'),
     validator = require('validator'),
     extend = require('extend'),
     raneto = require('raneto-core'),
@@ -37,45 +36,6 @@ i18n.configure({
     locales:config.lang_paths,
     directory: __dirname + '/locales'
 });
-
-var parse = marked.Parser.parse;
-marked.Parser.parse = function(src, options, renderer) {
-    options.renderer.links = src.links;
-    return parse(src, options, renderer);
-};
-
-function buildMarkedReader() {
-    // Allows the definition of explicit anchors by defining headings like this:
-    //   ## (anchor_id) This is a header
-    // This enables using same anchors on any language
-    var customRenderer = new marked.Renderer();
-    customRenderer.heading = function (text, level, raw) {
-        var escapedText;
-        var regex = /^\(([^)]+)\)/;
-        var matches = text.match(regex);
-
-        if (matches !== null && matches.length > 1) {
-            escapedText = matches[1];
-            text = text.replace(regex, '').trim();
-            var link = this.links[escapedText]; 
-            if (link != null && link.href != null) {
-                escapedText = link.href.substring(1);
-            }
-        }
-        else {
-            escapedText = raw.toLowerCase().replace(/[^\w]+/g, '-');
-        }
-
-        return '<h' + level + '><a name="' +
-                    escapedText +
-                     '" class="anchor" href="#' +
-                     escapedText +
-                     '"><span class="header-link"></span></a>' +
-                      text + '</h' + level + '>';
-    };
-
-    return customRenderer;
-}
 
 // Handle all requests
 app.all('*', function(req, res, next) {
@@ -132,19 +92,13 @@ app.all('*', function(req, res, next) {
                 if(path.extname(filePath) == '.md'){
                     // File info
                     var stat = fs.lstatSync(filePath);
-                    // Meta
-                    var meta = raneto.processMeta(content);
-                    content = raneto.stripMeta(content);
-                    if(!meta.title) meta.title = raneto.slugToTitle(filePath);
-                    // Content
-                    content = raneto.processVars(content);
-                    var html = marked(content, { renderer: buildMarkedReader() });
+                    var page = raneto.getPage(filePath);
 
                     return res.render('page', {
                         config: config,
                         pages: pageList,
-                        meta: meta,
-                        content: html,
+                        meta: page.meta,
+                        content: page.body,
                         body_class: 'page-'+ raneto.cleanString(slug),
                         last_modified: moment(stat.mtime).format(i18n.__('Date Format')),
                         root: '/' + raneto.getLangPrefix(slug, false),
