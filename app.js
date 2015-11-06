@@ -19,6 +19,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('layout', 'layout');
 app.set('view engine', 'html');
 app.enable('view cache');
+app.set('case sensitive routing', true);
 app.engine('html', require('hogan-express'));
 
 // Setup Express
