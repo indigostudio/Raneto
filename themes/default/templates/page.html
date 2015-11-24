@@ -4,12 +4,12 @@
 
     <ul class="menu">
       {{#config.allow_editing}}
-        <li><input id="newCategory" type="text" class="form-control" placeholder="Add Category"/></li>
+        <li><input id="newCategory" type="text" class="form-control" placeholder="{{#literal}}Add Category{{/literal}}"/></li>
       {{/config.allow_editing}}
       {{#pages}}
         <li class="category">
           {{#is_index}}
-            <h5 class="category-title">Main Articles {{#config.allow_editing}}<a class="add-page" data-toggle="modal" data-target="#addModal"><span style="font-weight: bold; font-size: 16px; cursor:pointer">&#43;</span></a>{{/config.allow_editing}}</h5>
+            <h5 class="category-title">{{#literal}}Main Articles{{/literal}} {{#config.allow_editing}}<a class="add-page" data-toggle="modal" data-target="#addModal"><span style="font-weight: bold; font-size: 16px; cursor:pointer">&#43;</span></a>{{/config.allow_editing}}</h5>
           {{/is_index}}
           {{^is_index}}
               <h5 class="category-title">{{title}} {{#config.allow_editing}}<a class="add-page" data-toggle="modal" data-target="#addModal"><span style="font-weight: bold; font-size: 16px; cursor:pointer">&#43;</span></a>{{/config.allow_editing}}</h5>
@@ -34,8 +34,8 @@
             Actions <span class="caret"></span>
           </button>
           <ul class="dropdown-menu" role="menu">
-            <li><a class="goto-edit">Edit</a></li>
-            <li><a data-toggle="modal" data-target="#deleteModal">Delete</a></li>
+            <li><a class="goto-edit">{{#literal}}Edit{{/literal}}</a></li>
+            <li><a data-toggle="modal" data-target="#deleteModal">{{#literal}}Delete{{/literal}}</a></li>
           </ul>
         </div>
       {{/config.allow_editing}}
@@ -47,11 +47,11 @@
       <div class="page-meta clearfix">
         {{#config.support_email}}
           <div class="contact-support pull-left">
-            <span class="glyphicon glyphicon-envelope"></span> Still need help? <a href="mailto:{{config.support_email}}">Get in touch!</a>
+            <span class="glyphicon glyphicon-envelope"></span> {{#literal}}Still need help?{{/literal}} <a href="mailto:{{config.support_email}}">{{#literal}}Get in touch!{{/literal}}</a>
           </div>
         {{/config.support_email}}
         <div class="last-updated pull-right">
-          Last updated on {{last_modified}}
+          {{#literal}}Last updated on{{/literal}} {{last_modified}}
         </div>
       </div>
 

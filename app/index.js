@@ -11,12 +11,12 @@ var cookie_parser = require('cookie-parser');
 var body_parser   = require('body-parser');
 var _s            = require('underscore.string');
 var moment        = require('moment');
-var marked        = require('marked');
 var validator     = require('validator');
 var extend        = require('extend');
 var hogan         = require('hogan-express');
 var basic_auth    = require('basic-auth-connect');
 var raneto        = require('raneto-core');
+var i18n          = require('i18n');
 
 function initialize (config) {
 
@@ -127,32 +127,50 @@ function initialize (config) {
 
   }
 
+  // Setup i18n
+  if (!config.locales_dir)  { config.locales_dir  = path.join(__dirname, '..', 'locales'); }
+  i18n.configure({
+    locales: config.lang_paths,
+    directory: config.locales_dir
+  });
+
   // Handle all requests
   app.get('*', function (req, res, next) {
 
+    var slug = req.params[0];
+    var lang = raneto.getLangPrefix(slug, true);
+    if (lang != "") {
+      i18n.setLocale(lang.substring(0, lang.length-1)); 
+    }
+
+    var literal = function() {
+      return function(text, render) { return i18n.__(text) }
+    }
+
     var suffix = 'edit';
 
-    if (req.query.search) {
-
+    if (req.query.search) {      
       var searchQuery    = validator.toString(validator.escape(_s.stripTags(req.query.search))).trim();
-      var searchResults  = raneto.doSearch(searchQuery);
-      var pageListSearch = raneto.getPages('');
+      var searchResults  = raneto.doSearch(slug, searchQuery);
+      var pageListSearch = raneto.getPages(slug);
 
       return res.render('search', {
         config: config,
         pages: pageListSearch,
         search: searchQuery,
         searchResults: searchResults,
-        body_class: 'page-search'
+        body_class: 'page-search',
+        root: '/' + raneto.getLangPrefix(slug, false),
+        literal: literal
       });
 
     } else if (req.params[0]) {
+      var isHome = raneto.isHome(slug);
+      if (isHome) slug = raneto.nromalizeHomeSlug(slug);
 
-      var slug = req.params[0];
-      if (slug === '/') { slug = '/index'; }
 
       var pageList     = raneto.getPages(slug);
-      var filePath     = path.normalize(raneto.config.content_dir + slug);
+      var filePath     = raneto.mapPath(slug);
       var filePathOrig = filePath;
 
       if (filePath.indexOf(suffix, filePath.length - suffix.length) !== -1) {
@@ -160,14 +178,16 @@ function initialize (config) {
       }
       if (!fs.existsSync(filePath)) { filePath += '.md'; }
 
-      if (slug === '/index' && !fs.existsSync(filePath)) {
+      if (isHome && !fs.existsSync(filePath)) {
 
         var stat = fs.lstatSync(path.join(config.theme_dir, config.theme_name, 'templates', 'home.html'));
         return res.render('home', {
           config        : config,
           pages         : pageList,
           body_class    : 'page-home',
-          last_modified : moment(stat.mtime).format('Do MMM YYYY')
+          last_modified : moment(stat.mtime).format(i18n.__('Date Format')),
+          root          : '/' + raneto.getLangPrefix(slug, false),
+          literal       : literal
         });
 
       } else {
@@ -177,7 +197,7 @@ function initialize (config) {
           fs.readFile(filePath, 'utf8', function (err, content) {
             if (err) {
               err.status = '404';
-              err.message = 'Whoops. Looks like this page doesn\'t exist.';
+              err.message = i18n.__('404');
               return next(err);
             }
 
@@ -201,7 +221,9 @@ function initialize (config) {
                 meta: meta,
                 content: html,
                 body_class: template + '-' + raneto.cleanString(slug),
-                last_modified: moment(stat.mtime).format('Do MMM YYYY')
+                last_modified: moment(stat.mtime).format(i18n.__('Date Format')),
+                root: '/' + raneto.getLangPrefix(slug, false),
+                literal: literal
               });
 
             }
@@ -230,12 +252,7 @@ function initialize (config) {
 
               // Content
               content = raneto.processVars(content);
-              // BEGIN: DISPLAY, NOT EDIT
-              marked.setOptions({
-                langPrefix: ''
-              });
-              var html = marked(content);
-              // END: DISPLAY, NOT EDIT
+              var html = raneto.renderPage(content);
               var template = meta.template || 'page';
 
               return res.render(template, {
@@ -244,7 +261,9 @@ function initialize (config) {
                 meta: meta,
                 content: html,
                 body_class: template + '-' + raneto.cleanString(slug),
-                last_modified: moment(stat.mtime).format('Do MMM YYYY')
+                last_modified: moment(stat.mtime).format(i18n.__('Date Format')),
+                root: '/' + raneto.getLangPrefix(slug, false),
+                literal: literal
               });
 
             } else {
