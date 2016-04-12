@@ -9,10 +9,12 @@ var logger        = require('morgan');
 var cookie_parser = require('cookie-parser');
 var body_parser   = require('body-parser');
 var moment        = require('moment');
+var validator     = require('validator');
 var extend        = require('extend');
 var hogan         = require('hogan-express');
 var session       = require('express-session');
 var raneto        = require('raneto-core');
+var i18n          = require('i18n');
 
 function initialize (config) {
 
@@ -62,7 +64,7 @@ function initialize (config) {
   app.use(body_parser.urlencoded({ extended : false }));
   app.use(cookie_parser());
   app.use(express.static(config.public_dir));
-  app.use(config.image_url, express.static(path.normalize(config.content_dir + config.image_url)));
+  app.use(config.image_url, express.static(path.normalize(path.join(config.content_dir, (config.default_lang_path||''), config.image_url))));
   app.use('/translations',  express.static(path.normalize(__dirname + '/translations')));
 
   // HTTP Authentication
@@ -86,9 +88,45 @@ function initialize (config) {
     app.post('/rn-add-category', authenticate, route_category_create);
   }
 
-  // Router for / and /index with or without search parameter
-  app.get('/:var(index)?', route_search, route_home);
-  app.get(/^([^.]*)/, route_wildcard);
+  // Setup i18n
+  if (!config.locales_dir)  { config.locales_dir  = path.join(__dirname, '..', 'locales'); }
+  i18n.configure({
+      locales: config.lang_paths,
+      directory: config.locales_dir
+  });
+
+  config.getBoundi18n = function(lang) {
+    if (!lang) {
+      lang = i18n.getLocale();
+    } else {
+      lang = lang.split("/")[0];  // Remove path separator if any
+    }
+
+    var boundLang = {
+      locale: lang,
+      phrase: undefined,
+    };
+
+    function translate(text) {
+      boundLang.phrase = text;
+      return i18n.__(boundLang);
+    }
+
+    // When passed to response.render exposes a template function.
+    // {{#literal}}Some text{{/literal}}
+    function literal() {
+      return function(text, render) {
+        return translate(text);
+      }
+    }
+
+    return {
+      literal,
+      __: translate
+    };
+  }
+
+  app.get(/^([^.]*)/, route_search, route_home, route_wildcard);
 
   // Handle Errors
   app.use(error_handler);

@@ -6,9 +6,18 @@ var fs                             = require('fs');
 var moment                         = require('moment');
 var get_filepath                   = require('../functions/get_filepath.js');
 var remove_image_content_directory = require('../functions/remove_image_content_directory.js');
+var i18n                           = require('i18n');
 
 function route_home (config, raneto) {
   return function (req, res, next) {
+
+    var slug = req.params[0] || '/';
+    if (!raneto.isHome(slug)) {
+      return next();  // Home calls handled by next() route
+    }
+
+    var lang = raneto.getLangPrefix(slug, true);
+    var i18n = config.getBoundi18n(lang);
 
     // Generate Filepath
     var filepath = get_filepath({
@@ -34,16 +43,18 @@ function route_home (config, raneto) {
     });
 
     var stat     = fs.lstatSync(template_filepath);
-    var pageList = remove_image_content_directory(config, raneto.getPages('/index'));
+    var pageList = remove_image_content_directory(config, raneto.getPages(slug));
 
     return res.render('home', {
       config        : config,
       pages         : pageList,
       body_class    : 'page-home',
       meta          : config.home_meta,
-      last_modified : moment(stat.mtime).format('Do MMM YYYY'),
+      last_modified : moment(stat.mtime).format(i18n.__('Date Format')),
       lang          : config.lang,
-      loggedIn      : (config.authentication ? req.session.loggedIn : false)
+      loggedIn      : (config.authentication ? req.session.loggedIn : false),
+      root          : "/" + raneto.getLangPrefix(slug, false),
+      literal       : i18n.literal
     });
 
   };

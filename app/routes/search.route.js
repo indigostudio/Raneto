@@ -12,8 +12,13 @@ function route_search (config, raneto) {
     // Skip if Search not present
     if (!req.query.search) { return next(); }
 
+    var slug = req.params[0] || '/';
+
+    var lang = raneto.getLangPrefix(slug, true);
+    var i18n = config.getBoundi18n(lang);
+
     var searchQuery    = validator.toString(validator.escape(_s.stripTags(req.query.search))).trim();
-    var searchResults  = raneto.doSearch(searchQuery);
+    var searchResults  = raneto.doSearch(slug, searchQuery);
     var pageListSearch = remove_image_content_directory(config, raneto.getPages(''));
 
     // TODO: Move to Raneto Core
@@ -33,7 +38,9 @@ function route_search (config, raneto) {
       searchResults : searchResults,
       body_class    : 'page-search',
       lang          : config.lang,
-      loggedIn      : (config.authentication ? req.session.loggedIn : false)
+      loggedIn      : (config.authentication ? req.session.loggedIn : false),
+      root          : "/" + raneto.getLangPrefix(slug, false),
+      literal       : i18n.literal
     });
 
   };

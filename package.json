@@ -26,7 +26,7 @@
   "scripts": {
     "start": "DEBUG=raneto node example/server.js",
     "start_win": "set DEBUG=raneto&&node example/server.js",
-    "postinstall": "npm update && npm run gulp",
+    "postinstall": "gulp",
     "gulp": "gulp"
   },
   "engines": {
@@ -47,15 +47,15 @@
     "gulp-shell": "0.5.2",
     "highlightjs": "8.7.0",
     "hogan-express": "0.5.2",
+    "i18n": "^0.5.0",
     "jquery": "2.2.0",
     "jquery.backstretch": "2.1.1",
     "lunr": "0.5.12",
-    "marked": "0.3.5",
     "masonry-layout": "3.3.2",
     "moment": "2.11.2",
     "morgan": "1.6.1",
     "pm2": "1.0.0",
-    "raneto-core": "0.4.0",
+    "raneto-core": "git://github.com/indigostudio/Raneto-Core.git#indigodesigned",
     "sanitize-filename": "1.5.3",
     "serve-favicon": "2.3.0",
     "sweetalert": "1.1.3",

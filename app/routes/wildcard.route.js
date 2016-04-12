@@ -16,9 +16,14 @@ function route_wildcard (config, raneto) {
 
     var suffix = 'edit';
     var slug   = req.params[0];
-    if (slug === '/') { slug = '/index'; }
+    if (raneto.isHome(slug)) {
+        slug = raneto.normalizeHomeSlug(slug);
+    }
 
-    var file_path      = path.normalize(raneto.config.content_dir + slug);
+    var lang = raneto.getLangPrefix(slug, true);
+    var i18n = config.getBoundi18n(lang);
+
+    var file_path      = raneto.mapPath(slug);
     var file_path_orig = file_path;
 
     // Remove "/edit" suffix
@@ -65,13 +70,9 @@ function route_wildcard (config, raneto) {
           content = content;
 
         } else {
-
-          // Render Markdown
-          marked.setOptions({
-            langPrefix : ''
-          });
-          content = marked(content);
-
+          // Render the content
+          var makedOptions = {langPrefix: ''};
+          content = raneto.renderPage(content, makedOptions);
         }
 
         var page_list = remove_image_content_directory(config, raneto.getPages(slug));
@@ -82,11 +83,16 @@ function route_wildcard (config, raneto) {
           meta          : meta,
           content       : content,
           body_class    : template + '-' + raneto.cleanString(slug),
-          last_modified : moment(stat.mtime).format('Do MMM YYYY'),
+          last_modified : moment(stat.mtime).format(i18n.__('Date Format')),
           lang          : config.lang,
-          loggedIn      : (config.authentication ? req.session.loggedIn : false)
+          loggedIn      : (config.authentication ? req.session.loggedIn : false),
+          root          : "/" + raneto.getLangPrefix(slug, false),
+          literal       : i18n.literal
         });
 
+      } else {
+        // Serve static file
+        res.sendfile(filePath);
       }
 
     });

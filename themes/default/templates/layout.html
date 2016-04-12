@@ -4,7 +4,7 @@
 
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>{{#meta.title}}{{meta.title}} - {{/meta.title}}{{config.site_title}}</title>
+  <title>{{#meta.title}}{{meta.title}} - {{/meta.title}}{{^meta.title}}{{config.site_title}}{{/meta.title}}</title>
   {{#meta.description}}<meta name="description" content="{{meta.description}}">{{/meta.description}}
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -24,7 +24,7 @@
     <div class="container-fluid">
       <div class="row">
         <div class="col-sm-6">
-          <a href="{{config.base_url}}/" class="logo">{{config.site_title}}</a>
+          <a href="{{root}}" class="logo">{{config.site_title}}</a>
         </div>
         <div class="col-sm-6">
           <form class="form-inline pull-right">
@@ -37,7 +37,7 @@
               {{/loggedIn}}
             {{/config.authentication}}
           </form>
-          <form class="search-form form-inline pull-right" action="{{config.base_url}}/">
+          <form class="search-form form-inline pull-right" action="{{root}}/">
             <div class="form-group">
               <label class="sr-only" for="search">{{lang.global.search}}</label>
               <input type="search" class="form-control" name="search" id="search" size="30" value="{{search}}" placeholder="{{lang.global.search}}">
@@ -64,7 +64,7 @@
 
   {{#config.allow_editing}}
   {{#loggedIn}}
-  
+
     <!-- Modal: Add Page -->
     <div class="modal fade" id="addModal" tabindex="-1">
       <div class="modal-dialog">
