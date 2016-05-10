@@ -27,7 +27,7 @@ function route_wildcard (config, raneto) {
     var file_path_orig = file_path;
 
     // Remove "/edit" suffix
-    if (file_path.indexOf(suffix, file_path.length - suffix.length) !== -1) {
+    if (config.allow_editing !== false && file_path.indexOf(suffix, file_path.length - suffix.length) !== -1) {
       file_path = file_path.slice(0, - suffix.length - 1);
     }
 
@@ -59,7 +59,7 @@ function route_wildcard (config, raneto) {
         var render   = template;
 
         // Check for "/edit" suffix
-        if (file_path_orig.indexOf(suffix, file_path_orig.length - suffix.length) !== -1) {
+        if (config.allow_editing !== false && file_path_orig.indexOf(suffix, file_path_orig.length - suffix.length) !== -1) {
 
           // Edit Page
           if (config.authentication === true && !req.session.loggedIn) {
