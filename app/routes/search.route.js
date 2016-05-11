@@ -19,7 +19,7 @@ function route_search (config, raneto) {
 
     var searchQuery    = validator.toString(validator.escape(_s.stripTags(req.query.search))).trim();
     var searchResults  = raneto.doSearch(slug, searchQuery);
-    var pageListSearch = remove_image_content_directory(config, raneto.getPages(''));
+    var pageListSearch = remove_image_content_directory(config, raneto.getPages(slug));
 
     // TODO: Move to Raneto Core
     // Loop through Results and Extract Category
