@@ -5,7 +5,6 @@
 var path                           = require('path');
 var fs                             = require('fs');
 var moment                         = require('moment');
-var marked                         = require('marked');
 var remove_image_content_directory = require('../functions/remove_image_content_directory.js');
 
 function route_wildcard (config, raneto) {
