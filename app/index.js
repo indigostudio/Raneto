@@ -64,7 +64,14 @@ function initialize (config) {
   app.use(body_parser.urlencoded({ extended : false }));
   app.use(cookie_parser());
   app.use(express.static(config.public_dir));
+
+  // Configure image static routes for each language
   app.use(config.image_url, express.static(path.normalize(path.join(config.content_dir, (config.default_lang_path||''), config.image_url))));
+  for (var i = 0; i < config.lang_paths.length; i++) {
+      var lang = config.lang_paths[i];
+      app.use("/" + lang + config.image_url, express.static(path.normalize(path.join(config.content_dir, lang, config.image_url))));
+  }
+  
   app.use('/translations',  express.static(path.normalize(__dirname + '/translations')));
 
   // HTTP Authentication

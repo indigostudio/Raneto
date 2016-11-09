@@ -53,7 +53,7 @@ function route_wildcard (config, raneto) {
 
         // Content
         content = raneto.stripMeta(content);
-        content = raneto.processVars(content);
+        content = raneto.processVars(content, slug);
 
         var template = meta.template || 'page';
         var render   = template;
@@ -92,7 +92,7 @@ function route_wildcard (config, raneto) {
 
       } else {
         // Serve static file
-        res.sendfile(filePath);
+        res.sendfile(file_path);
       }
 
     });
