@@ -65,13 +65,15 @@ function initialize (config) {
   app.use(cookie_parser());
   app.use(express.static(config.public_dir));
 
-  // Configure image static routes for each language
-  app.use(config.image_url, express.static(path.normalize(path.join(config.content_dir, (config.default_lang_path||''), config.image_url))));
-  for (var i = 0; i < config.lang_paths.length; i++) {
-      var lang = config.lang_paths[i];
-      app.use("/" + lang + config.image_url, express.static(path.normalize(path.join(config.content_dir, lang, config.image_url))));
+  // Configure image static routes for default and each language
+  addImagesRoute(app, config, '');
+  if (config.lang_paths) {
+    for (let i = 0; i < config.lang_paths.length; i++) {
+      let lang = config.lang_paths[i];
+      addImagesRoute(app, config, lang);
+    }
   }
-  
+
   app.use('/translations',  express.static(path.normalize(__dirname + '/translations')));
 
   // HTTP Authentication
@@ -140,6 +142,13 @@ function initialize (config) {
 
   return app;
 
+}
+
+function addImagesRoute(app, config, lang) {
+  let langPath = lang || config.default_lang_path || '';
+  let imagesPath = path.normalize(path.join(config.content_dir, langPath, config.image_url));
+  let langUrl = lang ? "/" + lang + config.image_url : config.image_url;
+  app.use(langUrl, express.static(imagesPath));
 }
 
 // Exports
