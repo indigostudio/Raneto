@@ -1,4 +1,3 @@
-
 'use strict';
 
 var config = {
@@ -59,8 +58,9 @@ var config = {
   home_meta : {
     //title       : 'Custom Home Title',
     //description : 'Custom Home Description'
-  }
+  },
 
+  logger: require('morgan')('dev')
 };
 
 // Exports

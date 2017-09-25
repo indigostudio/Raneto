@@ -5,7 +5,6 @@
 var path          = require('path');
 var express       = require('express');
 var favicon       = require('serve-favicon');
-var logger        = require('morgan');
 var cookie_parser = require('cookie-parser');
 var body_parser   = require('body-parser');
 var moment        = require('moment');
@@ -58,8 +57,11 @@ function initialize (config) {
   app.engine('html', hogan);
 
   // Setup Express
+  if (config.logger) {
+    app.use(config.logger);
+  }
+  
   app.use(favicon(config.public_dir + '/favicon.ico'));
-  app.use(logger('dev'));
   app.use(body_parser.json());
   app.use(body_parser.urlencoded({ extended : false }));
   app.use(cookie_parser());
