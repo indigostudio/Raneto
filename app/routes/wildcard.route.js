@@ -85,7 +85,7 @@ function route_wildcard (config, raneto) {
           last_modified : moment(stat.mtime).format(i18n.__('Date Format')),
           lang          : config.lang,
           loggedIn      : (config.authentication ? req.session.loggedIn : false),
-          root          : "/" + raneto.getLangPrefix(slug, false),
+          root          : config.base_url + "/" + raneto.getLangPrefix(slug, false),
           literal       : i18n.literal
         });
 

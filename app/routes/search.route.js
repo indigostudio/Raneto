@@ -39,7 +39,7 @@ function route_search (config, raneto) {
       body_class    : 'page-search',
       lang          : config.lang,
       loggedIn      : (config.authentication ? req.session.loggedIn : false),
-      root          : "/" + raneto.getLangPrefix(slug, false),
+      root          : config.base_url + "/" + raneto.getLangPrefix(slug, false),
       literal       : i18n.literal
     });
 
