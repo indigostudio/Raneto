@@ -18,31 +18,39 @@ function route_search (config, raneto) {
     var i18n = config.getBoundi18n(lang);
 
     var searchQuery    = validator.toString(validator.escape(_s.stripTags(req.query.search))).trim();
-    var searchResults  = raneto.doSearch(slug, searchQuery);
-    var pageListSearch = remove_image_content_directory(config, raneto.getPages(slug));
 
-    // TODO: Move to Raneto Core
-    // Loop through Results and Extract Category
-    searchResults.forEach(function (result) {
-      result.category = null;
-      var split = result.slug.split('/');
-      if (split.length > 1) {
-        result.category = split[0];
+    raneto
+      .doSearch(slug, searchQuery)
+      .then(function(searchResults) {
+      var pageListSearch = remove_image_content_directory(config, raneto.getPages(slug));
+
+      // TODO: Move to Raneto Core
+      // Loop through Results and Extract Category
+      searchResults.forEach(function (result) {
+        result.category = null;
+        var split = result.slug.split('/');
+        if (split.length > 1) {
+          result.category = split[0];
+        }
+      });
+  
+      res.render('search', {
+        config        : config,
+        pages         : pageListSearch,
+        search        : searchQuery,
+        searchResults : searchResults,
+        body_class    : 'page-search',
+        lang          : config.lang,
+        loggedIn      : (config.authentication ? req.session.loggedIn : false),
+        root          : config.base_url + "/" + raneto.getLangPrefix(slug, false),
+        literal       : i18n.literal
+      });
+    })
+    .catch(function (err) {
+      if (!res.headersSent) {
+        res.sendStatus(500);
       }
     });
-
-    return res.render('search', {
-      config        : config,
-      pages         : pageListSearch,
-      search        : searchQuery,
-      searchResults : searchResults,
-      body_class    : 'page-search',
-      lang          : config.lang,
-      loggedIn      : (config.authentication ? req.session.loggedIn : false),
-      root          : config.base_url + "/" + raneto.getLangPrefix(slug, false),
-      literal       : i18n.literal
-    });
-
   };
 }
 
