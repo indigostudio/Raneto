@@ -70,8 +70,10 @@ describe('#processMeta()', function () {
 
   it('returns proper meta from file starting with a BOM character', function () {
     raneto.config.content_dir = path.join(__dirname, 'content/');
-    var result = raneto.getPage(path.join(raneto.config.content_dir, 'page-with-bom.md'));
-    expect(result).to.have.property('title', 'Example Page With BOM');
+    return raneto.getPage(path.join(raneto.config.content_dir, 'page-with-bom.md'))
+      .then(result => {
+        expect(result).to.have.property('title', 'Example Page With BOM');
+      });
   });
 
   it('returns array of meta values (YAML)', function () {
@@ -89,8 +91,10 @@ describe('#processMeta()', function () {
 
   it('returns proper meta from file starting with a BOM character (YAML)', function () {
     raneto.config.content_dir = path.join(__dirname, 'content/');
-    var result = raneto.getPage(raneto.config.content_dir + 'page-with-bom-yaml.md');
-    expect(result).to.have.property('title', 'Example Page With BOM for YAML');
+    return raneto.getPage(raneto.config.content_dir + 'page-with-bom-yaml.md')
+      .then(result => {
+        expect(result).to.have.property('title', 'Example Page With BOM for YAML');
+      });
   });
 
 });
@@ -169,18 +173,22 @@ describe('#getPage()', function () {
 
   it('returns an array of values for a given page', function () {
     raneto.config.content_dir = path.join(__dirname, 'content/');
-    var result = raneto.getPage(raneto.config.content_dir + 'example-page.md');
-    expect(result).to.have.property('slug', 'example-page');
-    expect(result).to.have.property('title', 'Example Page');
-    expect(result).to.have.property('body');
-    expect(result).to.have.property('excerpt');
+    return raneto.getPage(raneto.config.content_dir + 'example-page.md')
+      .then(result => {
+        expect(result).to.have.property('slug', 'example-page');
+        expect(result).to.have.property('title', 'Example Page');
+        expect(result).to.have.property('body');
+        expect(result).to.have.property('excerpt');
+      });
   });
 
   it('returns null if no page found', function () {
     raneto.config.content_dir = path.join(__dirname, 'content/');
-    var result = raneto.getPage(raneto.config.content_dir + 'nonexistent-page.md');
-    /* eslint-disable no-unused-expressions */
-    expect(result).to.be.null;
+    return raneto.getPage(raneto.config.content_dir + 'nonexistent-page.md')
+      .then(result => {
+        /* eslint-disable no-unused-expressions */
+        expect(result).to.be.null;
+      });
   });
 
 });
@@ -256,21 +264,26 @@ describe('#doSearch()', function () {
 
   it('returns an array of search results', function () {
     raneto.config.content_dir = path.join(__dirname, 'content/');
-    var result = raneto.doSearch('example');
-    expect(result).to.have.length(5);
+    return raneto.doSearch('example')
+      .then(result => {
+        expect(result).to.have.length(5);
+      });
   });
 
   it('returns an empty array if nothing found', function () {
     raneto.config.content_dir = path.join(__dirname, 'content/');
-    var result = raneto.doSearch('asdasdasd');
-    /* eslint-disable no-unused-expressions */
-    expect(result).to.be.empty;
+    return raneto.doSearch('asdasdasd')
+      .then(result => {
+        expect(result).to.be.empty;
+      });
   });
 
   it('returns an array if search has special characters', function () {
     raneto.config.content_dir = path.join(__dirname, 'content/');
-    var result = raneto.doSearch('with "special');
-    expect(result[0].title).to.be.deep.equals('Special Characters Page');
+    return raneto.doSearch('with "special')
+      .then(result => {
+        expect(result[0].title).to.be.deep.equals('Special Characters Page');
+      });
   });
 
 });

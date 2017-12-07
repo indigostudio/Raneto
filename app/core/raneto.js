@@ -8,6 +8,9 @@ const _s = require('underscore.string');
 const marked = require('marked');
 const lunr = require('lunr');
 const yaml = require('js-yaml');
+const util = require('./util');
+
+const promiseReadFile = util.promisify(fs.readFile);
 
 const default_config = {
   // The base URL of your site (allows you to use %base_url% in Markdown files)
@@ -150,30 +153,31 @@ class Raneto {
 
   // Get a page
   getPage (filePath) {
-    try {
-      const file = fs.readFileSync(filePath);
-      let slug = patch_content_dir(filePath).replace(patch_content_dir(this.config.content_dir), '').trim();
+    return promiseReadFile(filePath)
+      .then(file => {
+        const content_dir = patch_content_dir(path.normalize(this.config.content_dir));
+        let slug = patch_content_dir(filePath).replace(content_dir, '').trim();
 
-      if (slug.indexOf('index.md') > -1) {
-        slug = slug.replace('index.md', '');
-      }
-      slug = slug.replace('.md', '').trim();
+        if (slug.indexOf('index.md') > -1) {
+          slug = slug.replace('index.md', '');
+        }
+        slug = slug.replace('.md', '').trim();
 
-      const meta    = this.processMeta(file.toString('utf-8'));
-      let content = this.stripMeta(file.toString('utf-8'));
-      content     = this.processVars(content);
-      const html    = marked(content);
+        const meta  = this.processMeta(file.toString('utf-8'));
+        let content = this.stripMeta(file.toString('utf-8'));
+        content     = this.processVars(content);
+        const html  = marked(content);
 
-      return {
-        slug    : slug,
-        title   : meta.title ? meta.title : this.slugToTitle(slug),
-        body    : html,
-        excerpt : _s.prune(_s.stripTags(_s.unescapeHTML(html)), (this.config.excerpt_length || 400))
-      };
-    } catch (e) {
-      if (this.config.debug) { console.log(e); }
-      return null;
-    }
+        return {
+          slug    : slug,
+          title   : meta.title ? meta.title : this.slugToTitle(slug),
+          body    : html,
+          excerpt : _s.prune(_s.stripTags(_s.unescapeHTML(html)), (this.config.excerpt_length || 400))
+        };
+      }, err => {
+        if (this.config.debug) { console.log(err); }
+        return null;
+      });
   }
 
   // Get a structured array of the contents of contentDir
@@ -295,39 +299,88 @@ class Raneto {
   // Index and search contents
   doSearch (query) {
     const contentDir = patch_content_dir(path.normalize(this.config.content_dir));
-    const files = glob.sync(contentDir + '**/*.md');
-    const idx   = lunr(function () {
+
+    const searchPromise = this._createIndex(contentDir)
+      .then(idx => {
+        const results       = idx.search(query);
+        const searchResults = results.map(result => this._processSearchResult(contentDir, result.ref, query));
+        return Promise.all(searchResults);
+      });
+
+    return searchPromise;
+  }
+
+  _processSearchResult (contentDir, ref, query) {
+    return this.getPage(contentDir + ref)
+      .then(page => {
+        page.excerpt = page.excerpt.replace(new RegExp('(' + query + ')', 'gim'), '<span class="search-query">$1</span>');
+        return page;
+      });
+  }
+
+  _createIndex (contentDir) {
+    const id = this.config.locale;
+    if (id) {
+      try {
+        require('lunr-languages/lunr.' + id + '.js')(lunr);
+      } catch (err) {
+        if (this.config.debug) {
+          console.warn('No lunr configuration for ' + id);
+        }
+      }
+    }
+
+    const idx = lunr(function () {
+      if (id && lunr[id]) {
+        this.use(lunr[id]);
+      }
+
       this.field('title', { boost: 10 });
       this.field('body');
     });
 
-    files.forEach(filePath => {
-      try {
-        const shortPath = filePath.replace(contentDir, '').trim();
-        const file      = fs.readFileSync(filePath);
-        const meta      = this.processMeta(file.toString('utf-8'));
+    return new Promise((resolve, reject) => {
+      glob(contentDir + '**/*.md', (err, files) => {
+        if (err) {
+          reject(err);
+          return;
+        }
 
-        idx.add({
-          id    : shortPath,
-          title : meta.title ? meta.title : this.slugToTitle(shortPath),
-          body  : file.toString('utf-8')
+        const indexPromises = files.map(filePath =>
+          this._indexFile(idx, contentDir, filePath)
+        );
+
+        Promise
+          .all(indexPromises)
+          .then(() => { resolve(idx); }, reject);
+      });
+    });
+  }
+
+  _indexFile (idx, contentDir, filePath) {
+    // disregard files in directories with an ignore file
+    const dir = filePath.substring(0, filePath.lastIndexOf('/'));
+    const ignoreFile = dir + '/ignore';
+
+    if (!(fs.existsSync(ignoreFile) && fs.lstatSync(ignoreFile).isFile())) {
+      const shortPath = path.relative(contentDir, filePath).replace(/\\/g, '/');
+
+      return promiseReadFile(filePath)
+        .then(fileContent => {
+          var meta = this.processMeta(fileContent.toString('utf-8'));
+
+          idx.add({
+            id    : shortPath,
+            title : meta.title ? meta.title : this.slugToTitle(shortPath),
+            body  : fileContent.toString('utf-8')
+          });
+        })
+        .catch(err => {
+          if (this.config.debug) { console.log(err); }
         });
-
-      } catch (e) {
-        if (this.config.debug) { console.log(e); }
-      }
-    });
-
-    const results       = idx.search(query);
-    const searchResults = [];
-
-    results.forEach(result => {
-      const page = this.getPage(this.config.content_dir + result.ref);
-      page.excerpt = page.excerpt.replace(new RegExp('(' + query + ')', 'gim'), '<span class="search-query">$1</span>');
-      searchResults.push(page);
-    });
-
-    return searchResults;
+    } else {
+      Promise.resolve();
+    }
   }
 }
 
