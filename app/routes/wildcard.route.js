@@ -9,6 +9,7 @@ var marked                         = require('marked');
 var toc                            = require('markdown-toc');
 var get_last_modified              = require('../functions/get_last_modified.js');
 var remove_image_content_directory = require('../functions/remove_image_content_directory.js');
+var hogan = require('hogan.js');
 
 function route_wildcard (config, raneto) {
   return function (req, res, next) {
@@ -79,6 +80,14 @@ function route_wildcard (config, raneto) {
           });
           content = marked(content);
 
+          if (config.contentAsTemplate) {
+            try {
+              content = hogan.compile(content).render({config, lang: config.lang});
+            } catch (err) {
+              next(err);
+              return;
+            }
+          }
         }
 
         var pageList = remove_image_content_directory(config, raneto.getPages(slug));

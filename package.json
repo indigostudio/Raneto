@@ -56,6 +56,7 @@
     "gulp-shell": "^0.6.5",
     "highlightjs": "^9.10.0",
     "hogan-express": "^0.5.2",
+    "hogan.js": ">=2.0.0",
     "jquery": "^2.2.4",
     "jquery-backstretch": "^2.1.16",
     "js-yaml": "^3.9.1",
